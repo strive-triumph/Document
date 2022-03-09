@@ -1,0 +1,52 @@
+insert into table hoa_dim_project_rule values
+  ('hmt_22K0A7OK','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_1KRXY7JB','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_6FFGVHJX','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_4BU3MB4O','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_1ER4B5UN','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_2T76MEFL','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_23AJ6J7S','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_3RWNBQ0X','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_57O1QKGS','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_1XWRWYJ7','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_5TVG8DPP','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_3GKFOJJU','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_2AC178LP','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_79LQJ5OL','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_5MHHI2AR','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}'),
+  ('hmt_1C7OH2MK','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}');
+
+  insert into table hoa_dim_project_rule values
+    ('hmt_12QNJD3H','{"logicExpression":"","childrenList":[],"projectId":"hmt_12QNJD3H","ruleInfo":[]}')
+
+
+    select *,
+          CEILING(rn/150000) as slat
+    from
+          (
+          select *,
+                row_number() over(partition by project_id, event_type order by project_id) as rn
+            from
+                EventTableTmp
+          )
+
+
+   (
+   select *
+   from
+        (
+          select *,
+                CEILING(rn/150000) as slat
+          from
+                (
+                select *,
+                      row_number() over(partition by project_id, event_type order by project_id) as rn
+                  from
+                      EventTableTmp
+                ) t1
+        )t2
+   distribute by
+      project_id,
+      event_type,
+      slat
+   )t3

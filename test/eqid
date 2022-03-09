@@ -1,0 +1,106 @@
+// 获取eqid
+ private def getData(date: String): DataFrame = {
+   import spark.implicits._
+   val sql: String = s"select * from ${EqidConstant.database}.${EqidConstant.SequenceTable} where date=${date}"
+   log.info("sql: {}", sql)
+   spark
+           .sql(sql)
+           .as[HwaSequence]
+           .filter((hwaSequence: HwaSequence) => hwaSequence.common_params != null && hwaSequence.common_params.contains(EqidConstant.refererUrlCol) && hwaSequence.common_params(EqidConstant.refererUrlCol).contains("eqid"))
+           .map((hwaSequence: HwaSequence) => {
+             var eqid: String = ""
+             val array: Array[String] = hwaSequence
+                     .common_params(EqidConstant.refererUrlCol)
+                     .split("eqid=")
+             if (array.length > 1) {
+               eqid = array(1).split("&")(0)
+             }
+             eqid
+           })
+           .toDF("eqid")
+           .distinct()
+ }
+
+ s.split("eqid=")
+
+m&wd=&eqid=9268ad9f0007c5c90000000259aa7bb7&name=sfa
+
+
+kafka:
+ conn:
+   etl:
+     bootstrapServers: cdh6-kafka-01.hypers.cc:9092
+     securityProtocol: SASL_PLAINTEXT
+     saslKerberosServiceName: kafka
+     saslMechanism: GSSAPI
+   tmc:
+     bootstrapServers: cdh6-kafka-01.hypers.cc:9092
+     securityProtocol: SASL_PLAINTEXT
+     saslKerberosServiceName: kafka
+     saslMechanism: GSSAPI
+ source:
+   hwma:
+     topic:
+       - hwa_hwt_r1
+       - hma_hmt_r1
+     groupId: hoa-flink-etl-merge2kafka-1
+     startupMode: 3
+   hoa:
+     topic:
+       - hoa_merge_r1
+     groupId: hoa-flink-etl-kafka2hadoop-1
+     startupMode: 3
+   hoa_by_tmc:
+     topic:
+       - hoa_merge_r1
+     groupId: hoa-flink-etl-hoa2tmc-1
+     startupMode: 3
+ sink:
+   hoa:
+     topic:
+       - hoa_merge_r1
+     compressionType: lz4
+     transactionTimeout: 7200000
+     transactionalIdPrefix: hoa-flink-etl-mergedata2kafka
+     deliveryGuarantee: AT_LEAST_ONCE
+   tmc:
+     topic:
+       - hoa_tmc_r1
+     compressionType: lz4
+     transactionTimeout: 7200000
+     transactionalIdPrefix: hoa-flink-etl-hoa2tmc
+     deliveryGuarantee: AT_LEAST_ONCE
+
+
+kafka:
+ conn:
+   report:
+     bootstrapServers: cdh6-kafka-01.hypers.cc:9092
+     securityProtocol: SASL_PLAINTEXT
+     saslKerberosServiceName: kafka
+     saslMechanism: GSSAPI
+ source:
+   hoa:
+     topic:
+       - hoa_merge_r1
+     groupId: hoa-flink-etl-kafka2hadoop-1
+     startupMode: 3
+
+{"id": "","name": "a"}
+
+kafka:
+ conn:
+     bootstrapServers: cdh6-kafka-01.hypers.cc:9092
+     securityProtocol: SASL_PLAINTEXT
+     saslKerberosServiceName: kafka
+     saslMechanism: GSSAPI
+ source:
+     topic:
+       - hoa_merge_r1
+     groupId: hoa-flink-etl-kafka2hadoop-2
+     startupMode: 3
+redis:
+ sink:
+   hostAndPorts: 10.16.2.0:6379,10.16.2.0:6380,10.16.2.0:6381
+   expireSeconds: 86400
+   isCluster: true

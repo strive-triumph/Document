@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+BIN_PATH=`dirname "$0"`
+BIN_ABS_PATH=`cd "$BIN_PATH"; pwd -P`
+EXPORT_ROOT_PATH=${EXPORT_ROOT_PATH:-`dirname "$BIN_ABS_PATH"`}
+
+. ${EXPORT_ROOT_PATH}/bin/loadConf.sh
+loadConf ${EXPORT_ROOT_PATH}/conf/hyper-hoa-s3.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-common.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-computer.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-dimension.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-env.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-flink.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-nacos.properties
+loadConf ${EXPORT_ROOT_PATH}/conf/hypers-hoa-table-config.properties
+
+kinit -kt ${kerberos_keytab} ${kerberos_principal}
+
+for file in `ls $EXPORT_ROOT_PATH/lib/*.jar`
+ do
+   LIBJARS=$file,$LIBJARS
+ done
+
+for file in `ls $EXPORT_ROOT_PATH/conf/*.properties`
+  do
+    LIBJARS=$file,$LIBJARS
+  done
+
+export LIBJARS=$LIBJARS
+
+echo $LIBJARS
+echo "batch_yarn_queue:"${batch_yarn_queue}
+echo "deploy_mode:"${deploy_mode}
+
+spark3-submit \
+  --master yarn \
+  --queue ${batch_yarn_queue} \
+  --deploy-mode ${deploy_mode} \
+  --driver-class-path ${EXPORT_ROOT_PATH}/conf \
+  --jars $LIBJARS \
+  --principal ${kerberos_principal} \
+  --keytab ${kerberos_keytab} \
+  --conf spark.sql.adaptive.enabled=true \
+  --conf spark.sql.adaptive.join.enabled=true \
+  --conf spark.sql.adaptive.skewedJoin.enabled=true \
+  --conf spark.sql.adaptive.allowAdditionalShuffle=true \
+  --conf spark.sql.adaptive.coalescePartitions.enabled=true \
+  --conf spark.sql.adaptive.coalescePartitions.initialPartitionNum=200 \
+  --conf spark.sql.adaptive.coalescePartitions.minPartitionNum=1 \
+  --conf spark.sql.adaptive.advisoryPartitionSizeInBytes=384MB \
+"$@"
