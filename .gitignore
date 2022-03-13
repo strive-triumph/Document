@@ -6,7 +6,7 @@
 *.ear
 
 # IDEA
-.idea/
+.idea/*
 *.ipr
 *.iml
 *.iws
