@@ -1,0 +1,2 @@
+提交时报 不能超过100M的上传 可以 使用下面的命令来过滤掉文件
+git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch spark/data/数据样例.xlsx'
