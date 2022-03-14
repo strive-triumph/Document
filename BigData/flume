@@ -1,0 +1,7 @@
+zcat ecs-cdp-tracker-*/*-hwt.access.log.2022030911* | grep  -a '_ua=1&' | grep 'type=pv' | wc -l
+
+spark2-shell  --queue root.cdp.streaming
+
+spark.sql("select substring(other_params['FILE'],0,113) as hour, count(1) as num  from cdp_hwa.hwa where channel = '1' and `date` = '20220309' and type = 'pv' group by substring(other_params['FILE'],0,113)").show(false)
+
+for tar in *.tar.gz;  do tar xvf $tar; done
